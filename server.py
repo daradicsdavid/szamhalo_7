@@ -4,17 +4,15 @@ import struct
 
 def startServer():
     # Create a TCP/IP socket
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(('localhost', 10000))
-    sock.listen(1)
-    connection, client_address = sock.accept()
     while True:
         # Wait for a connection
-        data = connection.recv(1024)
+        data, address = sock.recvfrom(1024)
         if data:
             answer = generateAnswer(data)
             message = struct.pack('f', answer)
-            connection.sendall(message)
+            sock.sendto(message, address)
         else:
             break
 

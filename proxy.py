@@ -1,12 +1,10 @@
 import select, socket, queue
+import time
 
 
 def startProxy():
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    # Connect the socket to the port where the server is listening
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     server_address = ('localhost', 10000)
-    sock.connect(server_address)
 
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setblocking(0)
@@ -15,6 +13,8 @@ def startProxy():
     inputs = [server]
     outputs = []
     message_queues = {}
+
+    cache = {}
 
     while inputs:
         readable, writable, exceptional = select.select(
@@ -29,10 +29,14 @@ def startProxy():
                 print("Proxy receiving data from client!")
                 data = s.recv(1024)
                 if data:
-                    print("Proxy sending data to server!")
-                    sock.sendall(data)
-                    serverAnswer = sock.recv(1024)
-                    print("Proxy receiving data from server!")
+                    if data in cache and cache[data][1] - time.time() < 60:
+                        serverAnswer = cache[data][0]
+                    else:
+                        print("Proxy sending data to server!")
+                        sock.sendto(data, server_address)
+                        serverAnswer, _ = sock.recvfrom(1024)
+                        print("Proxy receiving data from server!")
+                        cache[data] = (serverAnswer, time.time())
                     message_queues[s].put(serverAnswer)
                     if s not in outputs:
                         outputs.append(s)

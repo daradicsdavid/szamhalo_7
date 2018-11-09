@@ -7,13 +7,13 @@ def startClient():
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect(('localhost', 50000))
     sent = 0
-    while sent < 5:
+    while sent < 50:
         s.sendall(createMessage())
         data = s.recv(1024)
         receivedData = struct.unpack("f", data)
         print('Received %d' % (receivedData[0]))
         sent += 1
-    s.close()
+    # s.close()
 
 
 def createMessage():
@@ -37,4 +37,4 @@ def randomOperator():
 
 
 def randomInt():
-    return random.randint(1, 100)
+    return random.randint(1, 5)
